@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using LicenceChecker;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
@@ -18,7 +19,7 @@ namespace LicenceGenerator
             TextReader tx = new StreamReader(new MemoryStream(licBytes));
             AsymmetricCipherKeyPair pair = (AsymmetricCipherKeyPair)new PemReader(tx).ReadObject();
             RsaKeyParameters priv = (RsaKeyParameters)pair.Private;
-            ISigner signer = SignerUtilities.GetSigner("SHA1withRSA");
+            ISigner signer = SignerUtilities.GetSigner("SHA256withRSA");
             signer.Init(true, priv);
             signer.BlockUpdate(messageBytes, 0, messageBytes.Length);
             return signer.GenerateSignature();
@@ -31,10 +32,10 @@ namespace LicenceGenerator
             return result;
         }
 
-        public Licencia GenerateLicence(string suscritor, string aplicacion, int mesesDeValides)
+        public Licence GenerateLicence(string suscritor, string aplicacion, int mesesDeValides)
         {
             var fechaDeVencimiento = DateTime.Now.AddMonths(mesesDeValides);
-            var licencia = new Licencia() { Suscriptor = suscritor, Aplicacion = aplicacion, FechaDeVencimiento = fechaDeVencimiento };
+            var licencia = new Licence() { Suscriptor = suscritor, Application = aplicacion, ExpirationDate = fechaDeVencimiento };
             var key = licencia.GetKey;
             var mensaje = Encoding.UTF8.GetBytes(key);
             var hash = SignBytes(mensaje);
@@ -42,7 +43,7 @@ namespace LicenceGenerator
             return licencia;
         }
 
-        public string SaveLicence(Licencia licencia, string directory)
+        public string SaveLicence(Licence licencia, string directory)
         {
             try
             {
